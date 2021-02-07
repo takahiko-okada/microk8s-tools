@@ -1,0 +1,41 @@
+# https://medium.com/hootsuite-engineering/building-docker-images-inside-kubernetes-42c6af855f25
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-deployment
+  namespace: cicd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+       app: jenkins
+       pubsvc: jenkins
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 3000
+        fsGroup: 2000
+      containers:
+        - name: jenkins-master
+          image: jenkins/jenkins:2.263.3-lts
+          volumeMounts:
+            - name: jenkins-home
+              mountPath: "/var/lib/jenkins"
+          ports:
+          - containerPort: 8080
+          resources:
+            requests:
+              cpu: "1000m"
+              memory: "1G"
+            limits:
+              cpu: "1000m"
+              memory: "2G"
+      volumes:
+        - name: jenkins-storage
+          persistentVolumeClaim:
+            claimName: jenkins-storage
